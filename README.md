@@ -110,5 +110,7 @@ Show success message without close button and closing it after 1 second.
 Show failure message with a text before and after message.
 	
 	$('#myalert').notice('show', 'info', 'Logged in.');
+	
+Show info message in your `#myalert`selector.
 
 And so on.
