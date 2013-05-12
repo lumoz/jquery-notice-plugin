@@ -34,7 +34,7 @@ You can view notice:
 - `delay`: (integer) Delay time to close (0 = none)
 - `float`: (bool) Show float alert or inner a item container
 - `float_width`: (string) Width: px | 'auto' (if floating)
-- - `float_position_top`: (integer) Position to top of page: % (if floating)
+- `float_position_top`: (integer) Position to top of page: % (if floating)
 - `float_position_left`: (integer) Position to left of page: % (if floating)
 - `class_container`: (string) Default class container
 - `class_default`: (string) Default item class

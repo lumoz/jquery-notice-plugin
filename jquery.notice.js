@@ -2,7 +2,7 @@
  * jQuery Plugin to show / hide failure, info or success notices.
  * @author	Luigi Mozzillo <luigi@innato.it>
  * @link	http://innato.it
- * @version 1.0.0
+ * @version 1.0.1
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,26 +28,42 @@
 		this.init(element, options)
 	}
 
+	// --------------------------------------------------------------------------
+
 	Notice.prototype = {
 
+		/**
+		 * Constructor
+		 */
 		constructor: Notice
 
-		// Initialize item
+		// --------------------------------------------------------------------------
+
+		/**
+		 * Initialize item
+		 */
 		, init: function(element, options) {
-			if (!$(element).length)
+
+			if ( ! $(element).length) {
 				element = document;
+			}
+
 			this.element	= element;
 			this.$element	= $(element);
 
 			// Check if use stored options or current
-			if (!$(document).data('notice_options') && options.store_options == true)
+			if ( ! $(document).data('notice_options') && options.store_options == true) {
 				$(document).data('notice_options', this.$options);
-			else if (options.inherit)
+			}
+			else if (options.inherit) {
 				options = $(document).data('notice_options');
+			}
+
 			this.options = $.extend({}, $.fn.notice.defaults, options);
 
 			// Create div item
-			this.$div = $('<div />').addClass('notice')
+			this.$div = $('<div />')
+				.addClass('notice')
 				.addClass(this.options.class_default);
 
 			// Add data
@@ -58,52 +74,68 @@
 			this.behaviours();
 
 			// Show if necessacy
-			if (this.options.show)
+			if (this.options.show) {
 				this.show();
-
+			}
 		}
 
+		// --------------------------------------------------------------------------
+
+		/**
+		 * Behaviours
+		 */
 		, behaviours: function() {
 			$(document).on('click', '[data-close="'+ this.options.class_default +'"]', $.proxy(this.close, this));
 			$(window).resize($.proxy(this._positions_item, this));
 		}
 
-		// Show notice
+		// --------------------------------------------------------------------------
+
+		/**
+		 * Show notice
+		 */
 		, show: function(status, message) {
 			var that = this;
 
-			// Hide container if exists
-			this.$container.hide();
-
 			// Remove old notices
-			$('.'+ this.options.class_default).remove();
+			$('.'+ this.options.class_default)
+				.hide()
+				.remove();
 
 			// Clean $div
-			this.$div.removeClass().addClass('notice')
+			this.$div
+				.removeClass()
+				.addClass('notice')
 				.addClass(this.options.class_default)
-				.html('').show();
+				.html('')
+				.show();
 
 			// Show alert floating (if document or no default container)
 			// or in a specifiched container
 			if (this.element != document) {
 				this.$container = this.$element;
 			} else {
-				if (!this.$container.length) {
+				if ( ! this.$container.length) {
 					this.options.float	= true;
 					this.$container		= $('body');
 				}
 			}
 
 			// If not exists status or message, use default
-			if (!status)	status	= this.options.status;
-			if (!message)	message	= this.options.message;
+			if ( ! status) {
+				status = this.options.status;
+			}
+			if ( ! message) {
+				message = this.options.message;
+			}
 
 			// Add status class to $div
 			this.$div.addClass(this._get_status_class(status));
 
 			// Check if show closer button
 			if (this.options.close_button) {
-				$('<a />').addClass(this.options.close_button_class)
+				$('<a />')
+					.addClass(this.options.close_button_class)
 					.attr('data-close', this.options.class_default)
 					.css('cursor', 'pointer')
 					.append('&times;')
@@ -111,7 +143,8 @@
 			}
 
 			// Append messages
-			this.$div.append(this.options.before_message)
+			this.$div
+				.append(this.options.before_message)
 				.append(message)
 				.append(this.options.after_message);
 
@@ -139,52 +172,74 @@
 			}
 		}
 
-		// Close notice
+		// --------------------------------------------------------------------------
+
+		/**
+		 * Close notice
+		 */
 		, close: function() {
 			var that = this;
 			this.$div.fadeOut(this.options.fadeout_speed);
 			return false;
 		}
 
-		// Check if status is valid
+		// --------------------------------------------------------------------------
+
+		/**
+		 * Check if status is valid
+		 */
 		, _get_status_class: function(status) {
 			for (var i = 0; i < this.status_enabled.length; i++) {
-				if (this.status_enabled[i] == status)
+				if (this.status_enabled[i] == status) {
 					return this.options['class_'+ status];
+				}
 			}
 			return this.options['class_'+ status_enabled[0]];
 		}
 
-		// Calculate position and dimentions of div (if floating)
+		// --------------------------------------------------------------------------
+
+		/**
+		 * Calculate position and dimentions of div (if floating)
+		 */
 		, _positions_item: function() {
 			if (this.options.float) {
+
 				// Apply position
 				this.$div.css({
-					width:		this.options.float_width == 'auto' ? parseInt($('body').width() / 2) : parseInt(this.options.float_width)
+					width:		this.options.float_width == 'auto'
+						? parseInt($('body').width() / 2)
+						: parseInt(this.options.float_width)
 				});
-				if ($(window).width() / 100 * 90 < this.$div.outerWidth()) {
+
+				if (($(window).width() / 100 * 90) < this.$div.outerWidth()) {
 					this.$div.css({
 						width:	$(window).width() / 100 * 90
 					});
 				}
+
 				this.$div.css({
-					top:	parseInt(($(window).height() / 100 * parseInt(this.options.float_position_top)) + $('body').scrollTop())
-					, left:	parseInt(($(window).width() / 100 * parseInt(this.options.float_position_left)) - (this.$div.outerWidth() / 2))
+					  top		parseInt(($(window).height() / 100 * parseInt(this.options.float_position_top)) + $('body').scrollTop())
+					, left:		parseInt(($(window).width() / 100 * parseInt(this.options.float_position_left)) - (this.$div.outerWidth() / 2))
 					, position:	'absolute'
 				});
 			}
 		}
-
-
 	}
+
+	// --------------------------------------------------------------------------
 
 	// Create plugin
 	$.fn.notice = function (option, status, message) {
-		return this.each(function () {
-			var $this = $(this)
-				, data = $this.data('notice')
+		return this.each(function() {
+			var   $this		= $(this)
+				, data		= $this.data('notice')
 				, options	= typeof option == 'object' && option
-			if (!data) $this.data('notice', (data = new Notice(this, options)))
+
+			if ( ! data) {
+				$this.data('notice', (data = new Notice(this, options)));
+			}
+
 			if (typeof option == 'string') {
 				switch (option) {
 					default:
@@ -195,10 +250,13 @@
 						break;
 				}
 			};
+
 			return $(this);
 		})
 	};
+
 	$.fn.notice.Constructor = Notice
+
 	// Empty call document item
 	$.notice = function(options, status, message) {
 		$(document).notice(options, status, message);
