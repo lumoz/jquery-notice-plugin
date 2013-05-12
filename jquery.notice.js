@@ -2,7 +2,7 @@
  * jQuery Plugin to show / hide failure, info or success notices.
  * @author	Luigi Mozzillo <luigi@innato.it>
  * @link	http://innato.it
- * @version 1.0.1
+ * @version 1.0.2
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,8 +99,7 @@
 
 			// Remove old notices
 			$('.'+ this.options.class_default)
-				.hide()
-				.remove();
+				.hide();
 
 			// Clean $div
 			this.$div
@@ -212,14 +211,14 @@
 						: parseInt(this.options.float_width)
 				});
 
-				if (($(window).width() / 100 * 90) < this.$div.outerWidth()) {
+				if ($(window).width() / 100 * 90 < this.$div.outerWidth()) {
 					this.$div.css({
 						width:	$(window).width() / 100 * 90
 					});
 				}
 
 				this.$div.css({
-					  top		parseInt(($(window).height() / 100 * parseInt(this.options.float_position_top)) + $('body').scrollTop())
+					  top:		parseInt(($(window).height() / 100 * parseInt(this.options.float_position_top)) + $('body').scrollTop())
 					, left:		parseInt(($(window).width() / 100 * parseInt(this.options.float_position_left)) - (this.$div.outerWidth() / 2))
 					, position:	'absolute'
 				});
