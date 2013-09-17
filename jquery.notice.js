@@ -1,8 +1,8 @@
 /**
- * jQuery Plugin to show / hide failure, info or success notices.
+ * jQuery Plugin to show / hide error, info or success notices.
  * @author	Luigi Mozzillo <luigi@innato.it>
  * @link	http://innato.it
- * @version 1.0.2
+ * @version 1.0.3
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,14 +33,19 @@
 	Notice.prototype = {
 
 		/**
-		 * Constructor
+		 * Constructor.
+		 *
 		 */
 		constructor: Notice
 
-		// --------------------------------------------------------------------------
+		// -------------------------------------
 
 		/**
-		 * Initialize item
+		 * Initialize item.
+		 *
+		 * @param  string element
+		 * @param  object options
+		 * @return void
 		 */
 		, init: function(element, options) {
 
@@ -52,11 +57,11 @@
 			this.$element	= $(element);
 
 			// Check if use stored options or current
-			if ( ! $(document).data('notice_options') && options.store_options == true) {
-				$(document).data('notice_options', this.$options);
+			if ( ! $(document).data('noticeOptions') && options.storeOptions == true) {
+				$(document).data('noticeOptions', this.$options);
 			}
 			else if (options.inherit) {
-				options = $(document).data('notice_options');
+				options = $(document).data('noticeOptions');
 			}
 
 			this.options = $.extend({}, $.fn.notice.defaults, options);
@@ -64,11 +69,11 @@
 			// Create div item
 			this.$div = $('<div />')
 				.addClass('notice')
-				.addClass(this.options.class_default);
+				.addClass(this.options.classDefault);
 
 			// Add data
-			this.$container = $('.'+ this.options.class_container);
-			this.status_enabled = [ 'info', 'success', 'failure' ]
+			this.$container = $('.'+ this.options.classContainer);
+			this.statusEnabled = [ 'info', 'success', 'error', 'warning' ]
 
 			// Set behaviours
 			this.behaviours();
@@ -79,33 +84,37 @@
 			}
 		}
 
-		// --------------------------------------------------------------------------
+		// -------------------------------------
 
 		/**
 		 * Behaviours
 		 */
 		, behaviours: function() {
-			$(document).on('click', '[data-close="'+ this.options.class_default +'"]', $.proxy(this.close, this));
-			$(window).resize($.proxy(this._positions_item, this));
+			$(document).on('click', '[data-close="'+ this.options.classDefault +'"]', $.proxy(this.close, this));
+			$(window).resize($.proxy(this._positionsItem, this));
 		}
 
-		// --------------------------------------------------------------------------
+		// -------------------------------------
 
 		/**
-		 * Show notice
+		 * Show notice.
+		 *
+		 * @param  mixed status (boolean or string)
+		 * @param  string message
+		 * @return void
 		 */
 		, show: function(status, message) {
 			var that = this;
 
 			// Remove old notices
-			$('.'+ this.options.class_default)
-				.hide();
+			$('.'+ this.options.classDefault)
+				.remove();
 
 			// Clean $div
 			this.$div
-				.removeClass()
+				.removeAttr('class')
 				.addClass('notice')
-				.addClass(this.options.class_default)
+				.addClass(this.options.classDefault)
 				.html('')
 				.show();
 
@@ -120,22 +129,38 @@
 				}
 			}
 
-			// If not exists status or message, use default
-			if ( ! status) {
-				status = this.options.status;
+			// If not exists status, use default
+			if (typeof status == 'boolean') {
+				status = status ? 'success' : 'error';
+			} else {
+				if ( ! status) {
+					status = this.options.status;
+				}
 			}
+
+			// If not exists message, use default
 			if ( ! message) {
 				message = this.options.message;
 			}
 
+			// Verify if need to prepend text or HTML to message
+			if (this.options['prependTo'+ that._capitalize(status)] != '') {
+				message = this.options['prependTo'+ that._capitalize(status)] + message;
+			}
+
+			// Verify if need to append text or HTML to message
+			if (this.options['appendTo'+ that._capitalize(status)] != '') {
+				message += this.options['appendTo'+ that._capitalize(status)];
+			}
+
 			// Add status class to $div
-			this.$div.addClass(this._get_status_class(status));
+			this.$div.addClass(this._getStatusClass(status));
 
 			// Check if show closer button
-			if (this.options.close_button) {
+			if (this.options.closeButton) {
 				$('<a />')
-					.addClass(this.options.close_button_class)
-					.attr('data-close', this.options.class_default)
+					.addClass(this.options.closeButtonClass)
+					.attr('data-close', this.options.classDefault)
 					.css('cursor', 'pointer')
 					.append('&times;')
 					.appendTo(this.$div);
@@ -143,9 +168,9 @@
 
 			// Append messages
 			this.$div
-				.append(this.options.before_message)
+				.append(this.options.beforeMessage)
 				.append(message)
-				.append(this.options.after_message);
+				.append(this.options.afterMessage);
 
 			// Append $div to $container
 			this.$container.append(this.$div);
@@ -153,13 +178,13 @@
 			// If position is floating, calculate dimensions
 			if (this.options.float) {
 				// Apply position to item
-				this._positions_item();
+				this._positionsItem();
 
 				// Fade-in $div
-				this.$div.fadeIn(this.options.fadein_speed);
+				this.$div.fadeIn(this.options.fadeinSpeed);
 			} else {
 				// Fade-in $container
-				this.$container.fadeIn(this.options.fadein_speed);
+				this.$container.fadeIn(this.options.fadeinSpeed);
 			}
 
 
@@ -171,44 +196,76 @@
 			}
 		}
 
-		// --------------------------------------------------------------------------
+		// -------------------------------------
 
 		/**
-		 * Close notice
+		 * Hide notice.
+		 *
+		 * @return boolean
 		 */
-		, close: function() {
+		, hide: function() {
 			var that = this;
-			this.$div.fadeOut(this.options.fadeout_speed);
+			this.$div.fadeOut(this.options.fadeoutSpeed);
 			return false;
 		}
 
-		// --------------------------------------------------------------------------
+		// -------------------------------------
 
 		/**
-		 * Check if status is valid
+		 * Hide notice (alias).
+		 *
+		 * @return boolean
 		 */
-		, _get_status_class: function(status) {
-			for (var i = 0; i < this.status_enabled.length; i++) {
-				if (this.status_enabled[i] == status) {
-					return this.options['class_'+ status];
-				}
-			}
-			return this.options['class_'+ status_enabled[0]];
+		, close: function() {
+			this.hide();
 		}
 
-		// --------------------------------------------------------------------------
+		// -------------------------------------
 
 		/**
-		 * Calculate position and dimentions of div (if floating)
+		 * Check if status is valid.
+		 *
+		 * @param  string status
+		 * @return boolean
 		 */
-		, _positions_item: function() {
+		, _getStatusClass: function(status) {
+			var that = this;
+			for (var i = 0; i < this.statusEnabled.length; i++) {
+				if (this.statusEnabled[i] == status) {
+					return this.options['class'+ that._capitalize(status)];
+				}
+			}
+			return this.options['class'+ that._capitalize(statusEnabled[0])];
+		}
+
+		// -------------------------------------
+
+		/**
+		 * Capitalize first letter in a string.
+		 *
+		 * @param  string string
+		 * @return string
+		 */
+		, _capitalize: function(string) {
+			string = string.toLowerCase();
+			return string.charAt(0).toUpperCase() + string.slice(1);
+		}
+
+		// -------------------------------------
+
+		/**
+		 * Calculate position and dimentions of div (if floating).
+		 *
+		 * @return void
+		 */
+		, _positionsItem: function() {
 			if (this.options.float) {
 
 				// Apply position
 				this.$div.css({
-					width:		this.options.float_width == 'auto'
+					width:		this.options.floatWidth == 'auto'
 						? parseInt($('body').width() / 2)
-						: parseInt(this.options.float_width)
+						: parseInt(this.options.floatWidth)
 				});
 
 				if ($(window).width() / 100 * 90 < this.$div.outerWidth()) {
@@ -218,8 +275,8 @@
 				}
 
 				this.$div.css({
-					  top:		parseInt(($(window).height() / 100 * parseInt(this.options.float_position_top)) + $('body').scrollTop())
-					, left:		parseInt(($(window).width() / 100 * parseInt(this.options.float_position_left)) - (this.$div.outerWidth() / 2))
+					  top:		parseInt(($(window).height() / 100 * parseInt(this.options.floatPositionTop)) + $('body').scrollTop())
+					, left:		parseInt(($(window).width() / 100 * parseInt(this.options.floatPositionLeft)) - (this.$div.outerWidth() / 2))
 					, position:	'absolute'
 				});
 			}
@@ -228,7 +285,14 @@
 
 	// --------------------------------------------------------------------------
 
-	// Create plugin
+	/**
+	 * Create plugin.
+	 *
+	 * @param  object option
+	 * @param  mixed  status (string or boolean)
+	 * @param  string message
+	 * @return object
+	 */
 	$.fn.notice = function (option, status, message) {
 		return this.each(function() {
 			var   $this		= $(this)
@@ -264,26 +328,35 @@
 	// Default options
 	$.fn.notice.defaults = {
 		status:					'info'				// Default alert status
-		, close_button:			true				// Show close button
-		, close_button_class:	'close'				// Add CSS class to close button
+		, closeButton:			true				// Show close button
+		, closeButtonClass:		'close'				// Add CSS class to close button
 		, delay:				0					// Delay time to close (0 = none)
 		, float:				false				// Show float alert or inner a item container
-		, float_width:			'auto'				// Width: px | 'auto' (if floating)
-		, float_position_top:	10					// Position to top of page: % (if floating)
-		, float_position_left:	50					// Position to left of page: % (if floating)
-		, class_container:		'notice'			// Default class container
-		, class_default:		'alert'				// Default item class
-		, class_info:			'alert-info'		// Default item class for info alert
-		, class_success:		'alert-success'		// Default item class for success alert
-		, class_failure:		'alert-error'		// Default item class for failure alert
-		, fadein_speed:			'fast'				// Fade-in speed: fast | slow | int milliseconds
-		, fadeout_speed:		'fast'				// Fade-out speed: fast | slow | int milliseconds
-		, before_message:		''					// HTML before message
-		, after_message:		''					// HTML after message
+		, floatWidth:			'auto'				// Width: px | 'auto' (if floating)
+		, floatPositionTop:		10					// Position to top of page: % (if floating)
+		, floatPositionLeft:	50					// Position to left of page: % (if floating)
+		, classContainer:		'notice'			// Default class container
+		, classDefault:			'alert'				// Default item class
+		, classInfo:			'alert-info'		// Default item class for info alert
+		, classSuccess:			'alert-success'		// Default item class for success alert
+		, classError:			'alert-error'		// Default item class for error alert
+		, classWarning:			'alert-warning'		// Default item class for warning alert
+		, fadeinSpeed:			'fast'				// Fade-in speed: fast | slow | int milliseconds
+		, fadeoutSpeed:			'fast'				// Fade-out speed: fast | slow | int milliseconds
+		, beforeMessage:		''					// HTML before message
+		, afterMessage:			''					// HTML after message
 		, message:				''					// Message HTML
 		, inherit:				true				// Set to inherit all options
-		, store_options:		true				// Set to store options for nex call
+		, storeOptions:			true				// Set to store options for nex call
 		, show:					false				// Show immediatly
+		, prependToInfo:		''					// Prepend text or HTML for info message
+		, appendToInfo:			''					// Append text or HTML for info message
+		, prependToSuccess:		''					// Prepend text or HTML for success message
+		, appendToSuccess:		''					// Append text or HTML for success message
+		, prependToError:		''					// Prepend text or HTML for error message
+		, appendToError:		''					// Append text or HTML for error message
+		, prependToWarning:		''					// Prepend text or HTML for warning message
+		, appendToWarning:		''					// Append text or HTML for warning message
 	}
 
 }(window.jQuery);
